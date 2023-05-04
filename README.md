@@ -4,19 +4,40 @@ Welcome to the R-Stats-Course repository! This course is designed to guide you t
 
 ## Table of Contents
 
-1. [Introduction to R](./01-Introduction-to-R)
-2. [Descriptive Statistics](./02-Descriptive-Statistics)
-3. [Probability Distributions](./03-Probability-Distributions)
-4. [Inferential Statistics](./04-Inferential-Statistics)
-5. [Regression Analysis](./05-Regression-Analysis)
-6. [Analysis of Variance (ANOVA)](./06-ANOVA)
-7. [Time Series Analysis](./07-Time-Series-Analysis)
-8. [Advanced Statistical Techniques](./08-Advanced-Statistical-Techniques)
+    1. First Module
+        - Basic Concepts;
+        - Measures of central tendency;
+        - Measures of dispersion;
+        - Data visualization techniques;
+        - Discrete probability distributions;
+        - Continuous probability distributions.
+
+    2. Second Module
+        - Confidence intervals;
+        - Hypothesis testing;
+        - Parametric and non-parametric tests;
+        - One-way ANOVA;
+        - Two-way ANOVA.
+
+    3. Third Module
+        - Simple linear regression;
+        - Multiple linear regression;
+        - Generalized linear regression.
+
+    4. Fourth Module
+        - Autoregressive models;
+        - Moving average models;
+        - Seasonal decomposition.
+
+    8. Last Module
+        - Principal component analysis (PCA);
+        - Cluster analysis;
+        - Machine learning algorithms.
 
 ## Getting Started
 
-1. Install R from the official website: https://cran.r-project.org/
-2. Install RStudio from the official website: https://www.rstudio.com/products/rstudio/download/
+1. Install R from the official website: [cran.r](https://cran.r-project.org/)
+2. Install RStudio from the official website: [RStudio](https://www.rstudio.com/products/rstudio/download/)
 3. Clone or download this repository to your local machine.
 4. Navigate to the individual course module directories and follow the instructions in the README files.
 
@@ -25,7 +46,7 @@ Welcome to the R-Stats-Course repository! This course is designed to guide you t
 Each module contains a combination of the following materials:
 
 - README.md: Overview and instructions for the module.
-- Lecture notes (PDF): Theoretical explanations and examples.
+- Lecture notes (HTML): Theoretical explanations and examples.
 - R scripts (.R): Demonstrations and hands-on exercises.
 - Data sets (.csv): Data files for hands-on exercises and examples.
 - Additional resources: External links to tutorials, blog posts, and textbooks.
