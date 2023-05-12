@@ -1,0 +1,572 @@
+---
+title: "Estatística Básica"
+author: "Pedro Victor Brasil Ribeiro"
+institute: "FAPEG"
+date: "18/04/2023 \n (Alterado em: `r format(Sys.Date(), '%d/%m/%Y %A')`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+
+theme_default <- theme_light()+
+  theme(
+    panel.grid.major = element_blank()
+    , panel.grid.minor = element_blank()
+    , plot.title = element_text(hjust = 0.5)
+  )
+ref <- function(x){
+  writeLines(ui)
+  print(
+    x
+    , .opts = list(
+      check.entries = FALSE
+      , style = "html"
+      , bib.style = "authoryear"
+    )
+  )
+}
+
+knitr::opts_chunk$set(
+  echo = F
+  , warning = F
+  , message = F
+)
+```
+
+Essa apresentação tem como objetivo apresentar e explicar conceitos básicos de estatística.
+
+De forma a:
+
+- Obter melhor entendimento de conceitos;
+- Compreender e aplicar conceitos;
+- Treinar capacidade de pensamento crítico sobre os dados.
+
+---
+class: inverse, center, middle
+
+# Natureza da Estatística
+
+.footnote[
+  Agresti & Finlay (1997), Johnson & Bhattacharyya (1992), Weiss (1999), Anderson & Sclove (1974) and Freund (2001)
+]
+
+---
+class: middle
+
+Estatística é um assunto muito amplo e com aplicações em quantas areas se queira. Em geral, pode-se dizer que estatistica é um conjunto de metodologias de **Coleta**, **Análise**, **Interpretação** e de retirar **Conclusões** de dados.
+
+--
+
+Dizendo de outra forma estatística é um conjunto de métodos e ferramentas desenvolvidas por cientistas e matemáticos para possibilidar a nós entendermos o mundo e o contexto de uma **Pergunta**, através de uma análise de dados.
+
+---
+class: center, middle
+
+# Desenhando sua pergunta
+
+---
+class: middle
+
+Uma pergunta bem criada e planeja já é um grande passo para sua resolução. Porém para tal temos alguns passos importante e, em geral, bastante complexos.
+
+  1. Delineamento: É o planejanmento e a direção de um caso de estudo;
+  2. Descrição: Uma breve análise descritivas e exploratória dos dados;
+  3. Inferencia: Generalizações sobre o fenômeno ou predições sobre o fenômeno representados pelos dados.
+
+
+---
+class: middle, center
+
+# População x Amostra
+
+---
+class: middle
+
+O conceito de **População** e **Amostra** são dois conceitos básicos e extremamente importantes na estatística.
+
+**Definição - População:** população é o conjunto completo de indivíduos, objetos, eventos ou medidas que possuem alguma característica em comum. Por exemplo:
+
+--
+
+- A população de interesse pode ser constituída por todos os alunos de uma escola;
+- Todos os habitantes de uma cidade;
+- Todas as notas de um exame.
+
+A população pode ser finita ou infinita, dependendo do tamanho do conjunto.
+
+---
+class: middle
+
+**Definição - Amostra:** Uma amostra é um subconjunto da população selecionada para ser estudado e analisado em uma pesquisa ou estudo estatístico. A amostra deve ser escolhida de forma representativa, de modo que as características da amostra sejam semelhantes às da população.
+
+A amostra pode ser aleatória, estratificada, por conglomerados, entre outras técnicas de seleção. A utilização de amostras é uma forma de obter informações sobre uma população sem a necessidade de analisar todos os seus elementos.
+
+Caso seja utilizada toda a população isso é chamado um Censo.
+
+```{r}
+set.seed(123456)
+df <- data.frame(
+  x = rbinom(25, 10, 0.7)
+  , y = rbinom(25, 10, 0.7)
+)
+
+p1 <- df %>% ggplot(aes(x = x, y = y))+
+  geom_point(color = 'red')+
+  ggtitle("População")+
+  theme_default+
+  theme(
+    axis.title.x = element_blank()
+    , axis.text.x = element_blank()
+    , axis.ticks.x = element_blank()
+    , axis.title.y = element_blank()
+    , axis.text.y = element_blank()
+    , axis.ticks.y = element_blank()
+  )
+```
+
+```{r}
+set.seed(123)
+amostra <- sample(seq_len(dim(df)[1]), 10)
+p2 <- df[amostra,] %>% ggplot(aes(x = x, y = y))+
+  geom_point(color = 'blue')+
+  ggtitle("Amostra")+
+  theme_default+
+  theme(
+    axis.title.x = element_blank()
+    , axis.text.x = element_blank()
+    , axis.ticks.x = element_blank()
+    , axis.title.y = element_blank()
+    , axis.text.y = element_blank()
+    , axis.ticks.y = element_blank()
+  )
+```
+
+---
+class: center, middle
+
+```{r}
+p1+p2
+```
+
+---
+class: middle
+
+A utilização da população, muitas vezes, é impossível ou extremamente cara de ser utilizada. Portanto é utilizado métodos amostrais para retirar amostras da população desejada, de forma a reduzir gasto e tempo e minimizando o viés amostral.
+
+--
+
+Viés amostral é um erro sistemático que ocorre quando a amostra selecionada aleatoriamente não é representativa da população devido a falhas na seleção da amostra. Isso pode ocorrer por várias razões:
+
+- Amostragem não aleatória;
+- Tamanho inadequado da amostra;
+- Falhas na medição ou viés do respondente.
+
+---
+class: middle
+
+Para minimizar o viés amostral, é fundamental usar métodos de amostragem:
+
+- Amostragem aleatória;
+- Amostragem estratificada;
+- Amostragem sistemática
+
+Definir critérios claros de inclusão na amostra e garantir uma alta taxa de resposta. Além disso, o aumento do tamanho da amostra pode ajudar a garantir uma representatividade mais robusta da população.
+
+---
+class: middle
+
+A escolha do método de amostragem a ser utilizado depende do objetivo da pesquisa e das características da população em estudo.
+
+---
+class: middle
+
+## Amostragem aleatória
+
+É a mais utilizada e geralmente é apropriada quando a população é homogênea e não há nenhum conhecimento prévio que justifique a utilização de outro método.
+
+--
+
+## Amostragem Estratificada
+
+É usada quando a população apresenta estratos ou subgrupos bem definidos, que diferem uns dos outros em termos de características importantes. Nesse caso, é importante que a amostra seja representativa de cada estrato, então é feita uma seleção aleatória dentro de cada estrato.
+
+--
+
+## Amostragem Sistemática
+
+É usada quando a população é grande e não é possível examinar todos os elementos da população. Nesse caso, a amostra é selecionada a partir de um padrão sistemático, por exemplo, selecionando a cada k-ésimo elemento.
+
+---
+class: middle
+
+## Exemplo Amostragem Aleatória
+
+.pull-left[
+```{r}
+knitr::include_graphics("https://raw.githubusercontent.com/ribeiropvb/curso_r_2023/70ff82833ef8374d69f38e424e80908e70f329e8/images/aas.PNG")
+```
+]
+
+.pull-right[
+Um pesquisador quer investigar a quantidade de estudante que ao saírem da sua graduação entraram em um mestrado em menos de 2 anos.
+
+Então a partir de um lista de n estudante o pesquisador vai amostrar aleatóriamente m estudantes (m < n).
+]
+
+
+---
+class: middle
+
+## Exemplo Amostragem Estratificada
+
+
+.pull-left[
+```{r}
+knitr::include_graphics("https://raw.githubusercontent.com/ribeiropvb/curso_r_2023/main/images/aes.PNG")
+```
+]
+
+.pull-right[
+Uma empresa quer realizar uma pesquisa de satisfação com seus clientes, mas sabe que eles estão divididos em diferentes faixas etárias.
+
+Para garantir que a amostra seja representativa, a empresa pode usar a amostragem estratificada, dividindo os clientes em grupos de faixas etárias e selecionando aleatoriamente uma quantidade proporcional de clientes de cada grupo.
+]
+---
+class: middle
+
+
+## Exemplo Amostragem Sistemática
+
+
+.pull-left[
+```{r}
+knitr::include_graphics("https://github.com/ribeiropvb/curso_r_2023/blob/70ff82833ef8374d69f38e424e80908e70f329e8/images/asis.PNG?raw=true")
+```
+]
+
+.pull-right[
+Uma empresa quer avaliar o nível de sastifação dos seus clientes, então eles decidem fazer um breve questionário com o terceiro cliente a sair da loja.
+
+Assim, removendo possíveis vies em relação a gênero, faixa etária, cor, etc..
+]
+
+---
+class: middle
+
+## Teste Piloto
+
+O teste piloto é um experimento em pequena escala realizado antes do estudo principal, com o objetivo de avaliar a viabilidade do estudo, identificar possíveis problemas e ajustar medidas, protocolos e procedimentos.
+
+--
+
+É importante para reduzir riscos, aumentar eficiência na coleta de dados e reduzir custos e tempo de pesquisa. O teste piloto também pode aumentar a credibilidade e a validade do estudo, garantindo que o protocolo seja adequado e que os dados coletados sejam de alta qualidade.
+
+--
+
+- Exemplos:
+
+  - Quanto tempo demora responder um questionário?
+  - Qual percentual de recusa existe?
+  - Alguma pergunta trouxe algum desconforto?
+
+---
+class: middle
+
+```{r}
+knitr::include_graphics("https://raw.githubusercontent.com/ribeiropvb/curso_r_2023/main/images/Diagram.png")
+```
+
+---
+class: center, middle, inverse
+
+# Estatística Descrivias
+
+---
+class: center, middle
+
+**Definição: ** Estatistica descritiva consiste de métodos para organizar e sumarizar informações.
+
+.footnote[
+  [1]. Weiss (1999)
+]
+
+---
+class: center, middle, inverse
+<!--- background-color: #e64626 --->
+
+# Tipo de variáveis
+
+---
+class: middle
+
+Uma variável é uma característica ou propriedade que pode ser medida ou observada em um conjunto de indivíduos, objetos ou eventos. Ela pode ser qualitativa, referindo-se a características não mensuráveis numericamente, ou quantitativa, referindo-se a medidas numéricas. As variáveis são essenciais em estatística, permitindo a análise e interpretação dos dados coletados em uma pesquisa ou experimento.
+
+---
+class: middle
+
+- Variáveis Quantitativas:
+
+São variáveis que possuam mensuráveis. Como altura, temperatura, número de filhos, número de carros.
+
+--
+
+  - Variáveis Quantitativas Discretas:
+  
+  São aquelas que pertencem ao conjunto dos inteiros, não possuindo valores decimais. Como Número de filho ou carros.
+  
+--
+  
+  - Variáveis Quantitativas Contínuas:
+  
+  São aquelas que pertencem ao conjunto dos Reais, podendo possuir valores decimais. Como altura, peso, temperatura.
+
+---
+class: middle
+
+- Variáveis Quantitativas:
+
+São variáveis com características não numericamente mensuráveis. Como satisfação, nível de escolaridade , nome, Genero, cor dos olhos.
+
+--
+
+  - Variáveis Quantitativas Nominais:
+  
+  As variáveis quantitativas nominais são aquelas que representam atributos ou características que não têm uma ordem natural ou sequência. Isso significa que as categorias em que a variável é dividida não podem ser colocadas em uma ordem específica. Alguns exemplos de variáveis quantitativas nominais são: gênero (masculino/feminino), cor dos olhos (azul, verde, castanho), tipo sanguíneo (A, B, AB, O)
+
+--
+
+  - Variáveis Quantitativas Ordinais:
+  
+  são aquelas que possuem uma ordem natural ou sequência. Isso significa que as categorias em que a variável é dividida podem ser colocadas em uma ordem específica. Alguns exemplos de variáveis quantitativas ordinais são: nível de escolaridade (ensino fundamental, ensino médio, graduação, pós-graduação), grau de satisfação (muito insatisfeito, insatisfeito, indiferente, satisfeito, muito satisfeito)
+
+---
+class: middle, center, inverse
+
+# Medidas de tendência central
+
+---
+class: middle
+
+Medidas de tendência central são estatísticas descritivas utilizadas para resumir e descrever o comportamento de um conjunto de dados em relação ao seu centro. Elas representam valores que são considerados típicos ou centrais do conjunto de dados. As medidas de tendência central mais comuns são a média, a mediana e o modo.
+
+.footnote[
+  [1]. Zar (2010)
+  
+  [2]. Moretin & Bussab (2017)
+]
+
+--
+
+ - Média é a soma de todos os valores divididos pelo número de observações;
+ - Mediana é o valor que ocupa a posição central do conjunto de dados quando eles são colocados em ordem crescente ou decrescente;
+ - Moda é o valor que ocorre com maior frequência no conjunto de dados.
+
+--
+
+ Essas medidas são usadas para resumir o conjunto de dados em um único valor que representa o centro ou o ponto médio do conjunto de dados.
+
+
+---
+class: middle
+
+## Média Aritmética
+
+\begin{equation}
+  \bar{X} = \frac{1}{n} \times \sum^n_{i=1} X_i
+\end{equation}
+
+---
+class: middle
+
+- Mas porque ela é tão amplamente utilizada?
+
+Pois a média aritmética é função da maioria dos estimadores de máxima verossimilhança da maioria das distribuições estatisticas amplamente utilizadas. Tais como:
+
+--
+  - Distribuição Normal;
+  
+    $\hat{\mu} = \bar{X}$
+--
+  - Distribuição Binomial;
+  
+    $\hat{p} = \bar{X}$
+--
+  - Distribuição Geométrica;
+  
+    $\hat{p} = \frac{1}{\bar{X}}$
+--
+  - Distribuição Exponencial;
+  
+    $\hat{\lambda} = \frac{1}{\bar{X}}$ ou $\hat{\theta} = \bar{X}$
+--
+  - Entre outros.
+
+---
+class: middle
+
+# Mediana
+
+A mediana é uma medida de tendência central que divide um conjunto de dados ordenados em duas partes iguais. 
+
+--
+
+Formalmente, a mediana é definida como o valor que ocupa a posição central do conjunto de dados quando estes são dispostos em ordem crescente ou decrescente. Se o conjunto de dados tiver um número ímpar de observações, a mediana é o valor que ocupa a posição central. Se o conjunto de dados tiver um número par de observações, a mediana é a média dos dois valores centrais.
+
+--
+
+A mediana é uma medida de tendência central robusta, que não é afetada por valores extremos ou outliers no conjunto de dados. Porém ela não é uma **Estatistica de máxima verssimilhança**, salvo para a distribuição uniforme.
+
+Por isso, não é comumente utilizada para estimações e modelos paramétricos. Tendo seu uso para modelos não-paramétricos.
+
+---
+class: middle
+
+# Generalização
+
+A mediana, se trata de um percentil. Mais específicamente o percentil 50 - $P_{50}$.
+
+Em ultima análise os percentis são utilizados para realizar estatísticas de dispersão (como o **I**nter**Q**uatilic **R**ange [IQR] ).
+
+---
+class: middle
+
+# Percentil
+
+O percentil é uma medida estatística que indica a posição relativa de um determinado valor em relação a um conjunto de dados ordenados.
+
+--
+
+Formalmente, o percentil é definido como o valor abaixo do qual uma determinada porcentagem dos dados se encontra.O cálculo do percentil envolve a ordenação dos dados em ordem crescente ou decrescente e a identificação da posição relativa do valor de interesse.
+
+--
+
+É uma medida útil para descrever a distribuição dos dados e comparar diferentes conjuntos de dados, por isso é utilizada para realizar estatísticas de dispersão.
+
+---
+class: middle
+
+Percentis usuais:
+
+  - P<sup>0</sup> Ou o Mínimo;
+  - P<sup>25</sup> Ou o 1° quartil Q1;
+  - P<sup>50</sup> Ou o 2° quartil Q2 ou Mediana;
+  - P<sup>75</sup> Ou o 3° quartil Q3;
+  - P<sup>100</sup> Ou o Máximo.
+
+---
+class: middle
+
+Representa o valor ou valores que ocorrem com mais frequência em um conjunto de dados. Formalmente, a moda é definida como o valor ou valores com a maior frequência absoluta, ou seja, o valor que aparece mais vezes no conjunto de dados.
+--
+A moda pode ser usada para descrever a forma de uma distribuição de dados, especialmente em casos em que a distribuição não é simétrica. A moda é uma medida de tendência central não robusta, que pode ser afetada por valores extremos ou outliers no conjunto de dados.
+
+
+---
+class: middle, center, inverse
+
+# Medidas de Variação
+
+---
+class: middle
+
+Tem como intenção de desenvolver medidas numéricas capazes de representar a variação dos dados em relação a alguma medida de tendência central. Sendo as mais comuns: amplitude, IQR, desvio padrão, coeficiente de variação 
+
+---
+class: middle
+
+## Amplitude
+
+**Definição:** Amplitute é definida como a diferença entre o maior valor de X e o menor valor de X.
+
+Amplitude = max{X} - min{X}
+
+A utilização da amplitude não é muito utilizada pois ela ignora grande parte da informação disponível da amostra se resumindo somente nos dois elementos extremos.
+
+.footnote[
+  [1]. Manikandan (2011)
+]
+
+---
+class: middle
+
+# IQR
+
+**Definição:** IQR ou amplitude interquantílica é a diferença entre o $3^{\circ}$ e o $1^{\circ}$ quartil.
+
+É mais utilizado quando se analiza um amostra muito assimétrica e/ou com outliers muito representativos.
+
+.footnote[
+  [1]. Manikandan (2011)
+]
+
+---
+class: middle
+
+# Desvio Padrão
+
+Desvio padrão é a medida de dispersão mais comum. Ele mede a variabilidade dos dados em relação à média. Quanto maior for o desvio padrão, maior será a variabilidade dos dados, indicando que os valores estão mais distantes da média.
+
+\begin{equation}
+  \sigma = \sqrt{ \frac{ \sum_{i = 1}^{n} (x_i - \bar{x})^2 }{n-1} } = \sqrt{ \frac{ \sum_{i = 1}^{n} d_i^2 }{n-1} } 
+\end{equation}
+
+O desvio padrão pode ser interpretado com a média das distâncias euclidianas entre os elementos e sua média.
+
+---
+class: middle
+
+# IQR x Desvio Padrão
+
+Desvio padrão é mais apropriado de usar para dados aproximadamente normais ou quando se deseja comparar grupos com amostras similares;
+
+IQR é mais apropriado a se utilizar a dados assimetricos e quando se deseja comparar grupos com distribuições distintas. Adicionalmente, IQR é menos sentível a outlier.
+
+.footnote[
+  [1]. Manikandan (2011)
+]
+
+---
+class: middle
+
+O desvio pardão é uma medida de dispersão largamente utilizada, devido a ser vacilmente calculável e interpretável. Util para casos onde a distribuição é aproximadamento normal e não há outliers significativos. É função da função de máxima verossimilhança e é bem representativa.
+
+A amplitute interquantilica é uma medida de variavilidade robusta menos sensível aos outliers e apropriada para distribuições não-normais. É menos informativa sobre a caudas da distribuição e menos apropriada para comparações entre populações com diferentes medianas.
+
+---
+class: middle
+
+# Coeficiente de Variação 
+
+O coeficiente de variação (CV) é uma medida de variabilidade relativa de uma variável em relação à sua média. É calculado como o desvio padrão da variável dividido pela média da variável, e expresso em porcentagem.
+
+O CV é usado para comparar a variabilidade entre diferentes conjuntos de dados, especialmente quando eles têm médias diferentes. Ele permite avaliar a dispersão dos dados em relação à média de forma padronizada, independentemente da unidade de medida da variável. Quanto maior o valor do CV, maior a variabilidade relativa em relação à média, indicando que a dispersão dos dados é maior. Já um valor baixo de CV indica que os dados estão relativamente próximos da média, ou seja, há pouca variabilidade.
+
+--
+
+No entanto, o uso do CV tem algumas limitações. Em particular, ele não pode ser calculado para variáveis com média igual a zero ou muito próxima a zero. Além disso, o CV pode não ser adequado para comparar variáveis que têm diferentes distribuições, já que ele pressupõe que a distribuição é aproximadamente normal.
+
+---
+
+# Bibliografia
+
+```{r, load_refs, echo=FALSE}
+library(RefManageR)
+bib <- ReadBib("ref.bib", check = FALSE)
+ui <- "- "
+```
+
+```{r, print_refs, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+for (i in 1:length(bib)) {
+  ref(bib[[i]])
+}
+```
+
