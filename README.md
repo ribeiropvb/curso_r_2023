@@ -9,22 +9,26 @@ Welcome to the R-Stats-Course repository! This course is designed to guide you t
         - Measures of central tendency;
         - Measures of dispersion;
         - Data visualization techniques;
+
+    1. Second Module
+        - Basilar concepts in probability and inferece;
+        - Expectancy, Variance and Moment-generating function;
         - Discrete probability distributions;
         - Continuous probability distributions.
 
-    2. Second Module
+    2. Third Module
         - Confidence intervals;
         - Hypothesis testing;
         - Parametric and non-parametric tests;
         - One-way ANOVA;
         - Two-way ANOVA.
 
-    3. Third Module
+    3. Fourth Module
         - Simple linear regression;
         - Multiple linear regression;
         - Generalized linear regression.
 
-    4. Fourth Module
+    4. Fifth Module
         - Autoregressive models;
         - Moving average models;
         - Seasonal decomposition.
