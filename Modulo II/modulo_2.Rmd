@@ -1,0 +1,1474 @@
+---
+title: "Probabilidade e Inferência"
+author: "Pedro Victor Brasil Ribeiro"
+institute: "FAPEG"
+date: "10/05/2023 \n (Alterado em: `r format(Sys.Date(), '%d/%m/%Y -    %A')`)"
+header-includes:
+   - \usepackage{amsmath}
+   - \usepackage{mathtools}
+output:
+  xaringan::moon_reader:
+#    yolo: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: middle, center, inverse
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+library(viridis)
+library(viridisLite)
+library(e1071)
+library(kableExtra)
+library(Pareto)
+
+theme_default <- theme_light()+
+  theme(
+    panel.grid.major = element_blank()
+    , panel.grid.minor = element_blank()
+    , plot.title = element_text(hjust = 0.5)
+  )
+
+ref <- function(x){
+  writeLines(ui)
+  print(
+    x
+    , .opts = list(
+      check.entries = FALSE
+      , style = "html"
+      , bib.style = "authoryear"
+    )
+  )
+}
+
+knitr::opts_chunk$set(
+  echo = F
+  , warning = F
+  , message = F
+)
+```
+
+```{r}
+function_discrete <- function(x, y, limites, title){
+  tibble(
+    x = x
+    , y = y
+  ) %>%
+    ggplot(aes( x = x, y = y))+
+    geom_point()+
+    geom_segment(aes( xend = x, yend = 0 ))+
+    ylab('Probabilidade')+
+    ggtitle(title)+
+    xlim(limites)+
+    theme(plot.title = element_text(hjust = 0.5))+
+    theme_default
+}
+```
+
+
+# Distribuições Estatísticas
+---
+class: middle
+
+<h2 style="text-align: center;"> Tipo de distribuições </h2>
+
+### Distribuições Discretas
+
+Descreve o comportamento de uma v.a. que assume valores em um conjunto enumerável de pontos, ou seja, $X \in \mathbb{Z}$.
+
+Em outras palavras, uma v.a. discreta é aquela que pode assumir apenas valores finitos.
+
+A probabilidade de cada valor da variável pode ser determinada exatamente a partir da função de probabilidade discreta, e é representada por uma série de valores "em escada".
+
+---
+class: center, middle
+
+```{r}
+# Binomial
+
+x <- seq(0,50,by = 1)
+y <- dbinom(x,50,0.5)
+p1 <- function_discrete(
+  x, y
+  , limites = c(10,40)
+  , title = 'Distribuicao binomial'
+)
+
+#Poisson
+y <- dpois(x, lambda = 3)
+p2 <- function_discrete(
+  x, y
+  , limites = c(0,10)
+  , title = expression("Distribuicao Poisson " ~ lambda~' = 3')
+)
+
+p1+p2
+```
+
+
+---
+class: middle
+
+<h2 style="text-align: center;"> Tipo de distribuições </h2>
+
+### Distribuições Contínuas
+
+É uma função de probabilidade que descreve o comportamento de uma variável aleatória que pode assumir qualquer valor em um intervalo contínuo, ou seja, $X \in \mathbb{R}$.
+
+Uma variável aleatória contínua é caracterizada por sua densidade de probabilidade, que é uma função contínua, que descreve a probabilidade da variável assumir qualquer valor dentro de um intervalo.
+
+---
+class: center, middle
+
+```{r}
+# Distribuição Gama
+
+theta = seq(0,1,length=500)
+post <- dgamma(theta, 3, 2)
+df=data_frame(post,theta)
+
+p1 <- ggplot(data=df,aes(x=theta))+
+  stat_function(
+    fun=dgamma
+    , args=list( shape = 3, scale = 2 )
+  )+
+  xlim(x = c(0,20))+
+  ylab('')+
+  xlab('Variavel Aleatoria')+
+  ggtitle(
+    label = expression('Distribuicao Gama - '~Gamma~'('~alpha~' = 3, '~beta~' = 2 )')
+    , subtitle = 'Assimetria Positiva'
+  )+
+  theme_default
+p1
+```
+
+---
+class: center, middle
+
+```{r}
+# Distribuição normal
+
+theta = seq(0,1,length=500)
+post <- dnorm(theta, 10, 3)
+df=data_frame(post,theta)
+
+p2 <- ggplot(data=df,aes(x=theta))+
+  stat_function(
+    fun=dnorm
+    , args=list( mean = 10, sd = 3 )
+  )+
+  xlim(x = c(0,20))+
+  ylab('')+
+  xlab('Variavel Aleatoria')+
+  ggtitle(
+    label = expression('Distribuicao Normal - ('~mu~' = 10, '~sigma^2~' = 9)')
+    , subtitle = 'Simetrico'
+  )+
+  theme_default
+p2
+```
+
+---
+class: center, middle
+
+```{r}
+# Distribuição Beta
+
+theta = seq(0,1,length=500)
+post <- dbeta(theta, 10, 3)
+df=data_frame(post,theta)
+
+p3 <- ggplot(data=df,aes(x=theta))+
+  stat_function(
+    fun=dbeta
+    , args=list( shape1 = 10, shape2 = 3 )
+  )+
+  xlim(x = c(0,1))+
+  ylab('')+
+  xlab('Variavel Aleatoria')+
+  ggtitle(
+    label = expression('Distribuicao Beta - B( '~alpha~' = 10, '~beta~' = 3)')
+    , subtitle = 'Assimetria Negativa'
+  )+
+  theme_default
+p3
+```
+
+---
+class: middle
+
+Em resumo, as distribuições discretas e contínuas diferem em sua natureza fundamental. Uma distribuição discreta representa uma variável que pode assumir apenas um conjunto finito ou enumerável de valores, enquanto uma distribuição contínua representa uma variável que pode assumir qualquer valor em um intervalo contínuo.
+
+--
+
+Esta distinção é importante na seleção de técnicas estatísticas adequadas para análise de dados, já que cada tipo de distribuição requer métodos específicos para cálculo de probabilidades e outras medidas estatísticas.
+
+
+---
+class: middle
+
+## Informações Relevantes
+
+### Esperança
+
+A esperança, também conhecida como valor esperado, é uma medida estatística que representa o valor médio de uma variável aleatória. É calculada como a soma dos produtos dos possíveis valores da variável pelo valor de probabilidade de cada valor ocorrer.
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+--
+
+- Distibuições Discretas:
+$$
+E[X] = \sum_{i = 0}^{\infty} x_i p_i(x_i)
+$$
+
+- Distibuições Contínuas:
+$$
+E[X] = \int_{-\infty}^{+\infty} xf(x) dx
+$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+#### Propriedades
+
+Nas seguintes propriedades, **X, Y** são variáveis aleatórias, **a, b** são constantes. 
+
+$$E[a] = a$$
+$$E[a + bX] = a + bE[X]$$
+
+$$E[X + Y] = E[X] + E[Y]$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+$$E[XY] \neq E[X] \cdot E[Y]$$
+
+- A igualdade é válida se X e Y são independentes, porém é possível definir casos onde a igualdade é válida porém eles não são independentes
+
+Ou seja, a independência implica a igualdade, porém a igualdade não implica independência.
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+--
+
+$$E[X^2] = E[x^TAx] = Var(x) \cdot tr(A) + \left[ E[X] \right]^T \cdot A \cdot E[X]$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+### Variância
+
+A variância é uma medida de dispersão que quantifica a variabilidade dos valores de uma variável aleatória em relação à sua média. Ela indica o quão distantes os valores individuais estão da média. É calculada como a média dos quadrados das diferenças entre cada valor da variável e a média.
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+--
+
+#### Propriedades
+
+$$Var(X) = E[(X - \mu)^2] = E[X^2] - \left( E[X] \right)^2$$
+
+$$Var(aX + b) = a^2Var(X)$$
+
+$$Var(X + Y) = Var(X) + Var(Y) + 2 \cdot Cov(X,Y)$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+$$Var\left( \sum_{i = 1}^{N} a_iX_i \right) = \sum_{i = 1}^{N} a_i^2Var(X_i) + 2 \sum_{1 \leq i < j \leq N} a_ia_j Cov(X_i, X_j)$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+### Função Geradora de Momentos
+
+A função geradora de momentos é uma função matemática que descreve a relação entre os momentos de uma distribuição de probabilidade. Ela é definida como a transformada de Laplace dos momentos da distribuição. A função geradora de momentos fornece informações sobre os momentos da distribuição, como a média, variância, assimetria e curtose. Ela é útil para caracterizar e comparar diferentes distribuições de probabilidade.
+
+$$M_X(t) = E[e^{tX}], \quad \forall t \quad \text{Tal que} \quad E[X^{tX}] < \infty $$
+
+- Se X é discreta
+
+$$M_X(t) = \sum_k e^{tX} P(X = k)$$
+
+- Se X é contínua
+
+$$M_X(t) = \int_{-\infty}^{+\infty} e^{tX}f(x) dx$$
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+#### Propriedades
+
+$$M_{aX+b}(t) = e^{tb}M_X(at)$$
+
+Seja,
+$$Y = \sum_{i =1}^{n} X_i$$
+
+$$M_Y = M_{\sum_{i =1}^{n} X_i(t)} = \prod_{i = 1}^{n} M_{X_i}$$
+
+O que implica que, se as variáveis aleatórias $X_i$ são independentes e identicamente distribuidas.
+
+$$M_Y = \prod_{n}^{i = 1} M_{X_i} = \left( M_{X_1} \right)^n$$
+
+---
+class: center, middle, inverse
+
+# Mas pra que serve isso?
+
+---
+class: center, middle, inverse
+
+# Teorema da Unicidade da Função Geradora de Densidade
+
+.footnote[
+  [1]. Ross (2009)
+  [2]. Magalhães (2006)
+]
+
+---
+class: middle
+
+Existe uma única função de densidade associada a uma função geradora de momentos e vice-versa. Ou seja, duas funções de distribuição $f_1(X)$ e $f_2(X)$ são identicas, se e somente se, $M_{X_1}(t)$ e $M_{X_2}(t)$ são identicas.
+
+---
+class: middle
+
+## Exemplos:
+
+Seja $X \sim exp(\lambda)$, encontre sua função geradora de momentos (FGM).
+
+$$
+\begin{align}
+M_X(t) =& E[e^{tX}] \\
+=& \int_{0}^{\infty} e^{tX} \cdot \lambda e^{-\lambda X} \\
+=& \int_{0}^{\infty} \lambda \cdot e^{-x \cdot (\lambda - t)} \\
+=& \left[ - \frac{\lambda}{\lambda - t}e^{-x \cdot (\lambda - t)} \right]_{0}^{+\infty} \\
+=& \frac{\lambda}{\lambda - t} \qquad \blacksquare
+\end{align}
+$$
+
+---
+class: middle
+
+Dado a FGM demonstrada acima, mostre que, dado $X \sim exp(\lambda)$ e $Y = \sum_{i = 1}^{n} X_i$ e sabendo que a FGM da distribuição gamma é dada por $\left( \frac{\lambda}{\lambda - t} \right)^n$. Mostre que Y possui distribuição gama.
+
+
+$$
+\begin{align}
+M_Y(t) =& M_{\sum_{i = 1}^{n} X_i}(t) \\
+=& \prod_{i = 1}^{n} M_{X_1}(t) \\
+=& (M_{X_1})^n \\
+=& \left( \frac{\lambda}{\lambda - t} \right)^n
+\end{align}
+$$
+
+Portanto, $Y = \sum_{i = 1}^{n}X_i \sim \Gamma(\lambda, n)$. Ou seja, a soma de exponenciais possui distribuição gama.
+
+---
+class: middle, center
+
+Outras relações de distribuições.
+
+```{r, out.width = "450px", fig.align = "center"}
+knitr::include_graphics("https://raw.githubusercontent.com/ribeiropvb/curso_r_2023/main/Modulo%20II/imagens/distribution.png")
+```
+
+[http://www.math.wm.edu/~leemis/chart/UDR/UDR.html](http://www.math.wm.edu/~leemis/chart/UDR/UDR.html)
+
+---
+class: center, middle, inverse
+
+# Mas porque isso funciona?
+
+---
+class: center, middle
+
+## Irei assumir que todos sabem Cálculo I
+### Derivada e Série de Taylor
+
+---
+class: middle
+
+- Série de Taylor de $e^{tx}$
+
+$$
+\begin{align}
+E[e^{tx}] =& E \left[ \dfrac{(tx)^0}{0!} + \dfrac{(tx)^1}{1!} + \dfrac{(tx)^2}{2!} + \dfrac{(tx)^3}{3!} + \cdots + \dfrac{(tx)^n}{n!} \right] \\
+E[e^{tx}] =& E[1] + tE[X] + \dfrac{t^2}{2!}E[X^2] + \dfrac{t^3}{3!}E[X^3] + \cdots + \dfrac{t^n}{n!}E[X^n]
+\end{align}
+$$
+
+- Derivando em relação a t e fazendo t = 0:
+
+$$
+\begin{align}
+\dfrac{d}{dt} E[e^{tx}] =& \dfrac{d}{dt} \left( E[1] + tE[X] + \dfrac{t^2}{2!}E[X^2] + \dfrac{t^3}{3!}E[X^3] + \cdots + \dfrac{t^n}{n!}E[X^n] \right)\\
+=& 0 + E[X] + \dfrac{2t}{2} E[X^2] + \dfrac{3t^2}{3*2}E[X^3] + \cdots + \dfrac{nt^{n-1}}{n*(n-1)!}E[X^n] \\
+=& 0 + E[X] + 0 + 0 + \cdots + 0, \qquad t = 0 \\
+=& E[X] \qquad \blacksquare
+\end{align}
+$$
+
+---
+class: middle
+
+## k-ésimo momento
+
+- Derivando em relação a t e fazendo t = 0:
+
+$$
+\begin{align}
+\dfrac{d^k}{dt^k} E[e^{tx}] =& \dfrac{d^k}{dt^k} \left( E[1] + tE[X] + \dfrac{t^2}{2!}E[X^2] + \dfrac{t^3}{3!}E[X^3] + \cdots + \dfrac{t^n}{n!}E[X^n] \right)\\
+=& 0 + 0 + 0 + 0 + \cdots + \dfrac{k!}{k!}E[X^k] + \cdots + \dfrac{(n-k)!t^{n-k}}{(n-k)!*k!}E[X^n] \\
+=& 0 + 0 + 0 + 0 + \cdots + E[X^k] + \cdots + 0, \qquad t = 0 \\
+=& E[X^k] \qquad \blacksquare
+\end{align}
+$$
+
+---
+class: center, middle
+
+# Distribuições Estatísticas
+
+
+
+```{r, out.width = "450px", fig.align = "center"}
+knitr::include_graphics("https://raw.githubusercontent.com/ribeiropvb/curso_r_2023/main/Modulo%20II/imagens/img1.png")
+```
+
+---
+class: center, middle, inverse
+
+# Distribuições Discretas Principais
+
+---
+class: middle
+
+# Distribuição Bernoulli
+
+A distribuição Bernoulli é uma distribuição de probabilidade discreta que modela um único evento binário, com dois resultados possíveis: sucesso (1) ou fracasso (0).
+
+$$
+f(x) = p^x \cdot (1 - p)^{1-x}
+$$
+
+---
+class: middle
+
+**Nota Importante:** Sucesso não necessáriamente se trata de algo bom ou ruim, Exemplos:
+
+- Sucesso $\Rightarrow$ Possuir um doença;
+- Sucesso $\Rightarrow$ Ser homem;
+
+--
+
+É caracterizada por um parâmetro p que representa a probabilidade de sucesso em um único ensaio.
+
+$$
+E[X] = p
+$$
+
+$$
+Var(x) = p \times (1-p)
+$$
+
+É frequentemente usada como base para outras distribuições, como a binomial e a de Poisson. Tem aplicações em estatística, teoria da informação, processos estocásticos e aprendizado de máquina.
+
+---
+class: middle
+
+# Distribuição Binomial
+
+
+$$
+f(x) =\binom{n}{k}p^k(1- p)^{n-k}
+$$
+
+Modela o número de sucessos em um número fixo de tentativas independentes, onde cada tentativa tem apenas dois resultados possíveis ('Sucesso' ou 'Fracasso'). Ela é amplamente utilizada em situações em que ocorrem eventos binários, como "sim" ou "não", e é caracterizada pelos parâmetros do número de tentativas e a probabilidade de sucesso em cada tentativa.
+
+A distribuição binomial é relacionada à distribuição Bernoulli, que é um caso especial em que há apenas uma única tentativa.
+
+$$
+\begin{align}
+E[X] =& np \\
+Var(x) =& np \cdot (1-p)
+\end{align}
+$$
+
+
+---
+class: middle, center
+
+```{r}
+p1 <- function_discrete(
+  seq(0,50,by = 1)
+  , dbinom( x, 50, 0.25 )
+  , limites = c(0,40)
+  , title = ''
+)+ylab('')+xlab('')+
+theme(
+  axis.text.x=element_blank(),
+  axis.ticks.x=element_blank(),
+  axis.text.y=element_blank(),
+  axis.ticks.y=element_blank()
+)
+
+p2 <- function_discrete(
+  seq(0,50,by = 1)
+  , dbinom( x, 50, 0.5 )
+  , limites = c(0,40)
+  , title = ''
+)+ylab('')+xlab('')+
+theme(
+  axis.text.x=element_blank(),
+  axis.ticks.x=element_blank(),
+  axis.text.y=element_blank(),
+  axis.ticks.y=element_blank()
+)
+
+p3 <- function_discrete(
+  seq(0,50,by = 1)
+  , dbinom( x, 50, 0.75 )
+  , limites = c(0,50)
+  , title = ''
+)+ylab('')+xlab('')+
+theme(
+  axis.text.x=element_blank(),
+  axis.ticks.x=element_blank(),
+  axis.text.y=element_blank(),
+  axis.ticks.y=element_blank()
+)
+
+p1/p2/p3+ plot_annotation(
+  title = 'Distribuicao Binomial para valores de p 0.25, 0.5 e 0.75 respectivamente',
+  subtitle = 'Valores maiores de p aumentam a média da amostra',
+  caption = 'Parametros: n = 50 e p = 0.25/0.5/0.75'
+)
+```
+
+---
+class: middle
+
+## Relação Binomial e Bernouilli
+
+A distribuição Binomial se trata da soma de experimentos independentes Bernoulli.
+
+**Teorema:** Seja $X_1,X_2, \cdots,X_n$, independentes e igualmente distribuídos (*i.i.d.*), tal que $X_i \sim Ber(p)$:
+
+$$\therefore Y = \sum_{i = 1}^{n} X_i \sim Bin(n,p)$$
+
+.footnote[A demonstração é feita por Função Geradora de Momentos, que será apresentada posteriormente.]
+
+---
+class: middle
+
+- Bernoulli:
+
+$$
+\begin{align}
+M_X(t) =& E[e^{tX}] \\
+=& \sum_{n = 0}^{1} P(X = n)e^{tn} \\
+=& (1-p) + pe^t
+\end{align}
+$$
+
+--
+
+- Binomial
+
+$$
+\begin{align}
+M_Y(t) =& E[e^{tX}] \\
+=& \sum_{n = 0}^{n} e^{xt} \binom{n}{x}p^x(1-p)^{n-x} \\
+=&  \sum_{n = 0}^{n} \left( pe^t \right)^x \binom{n}{x} (1-p)^{n-x}, \qquad \text{Teorema Binomial} \\
+=& \left( 1 - p + pe^t \right)^n
+\end{align}
+$$
+
+---
+class: middle
+
+Seja,
+
+$$
+Y = \sum_{i = 1}^{n} X_i \qquad \text{, Tal que } X_i ~ Ber(p)
+$$
+E $X_i$ é iid (independente e identicamente distribuído).
+
+---
+class: middle
+
+Sabemos que,
+
+$$
+\begin{align}
+M_Y(t) =& E[e^{tY}] \\
+=& (E[e^{tX}])^n \\
+=& \left( 1 - p + pe^t \right)^n
+\end{align}
+$$
+
+--
+
+$\therefore$ Pelo Teorema da Unicidade da Função Geradora de Densidade, temos que:
+
+$$
+\begin{align}
+Y = \sum_{i = 1}^n X_i \sim Bin(n,p)
+\end{align}
+$$
+
+---
+class: middle
+
+# Distribuição Poisson
+
+$$
+\overbrace{f(x, \lambda) = \frac{e^{-\lambda}\lambda^x}{x!}}^{\text{Representação Clássica}}
+\quad \text{ou} \qquad
+\overbrace{P[N(t) = k ] = \frac{e^{-\lambda t}(\lambda t)^k}{k!}}^{\text{Represemtação Estocástica}}
+$$
+
+Modela a ocorrência de eventos raros em um intervalo fixo de tempo ou espaço. Ela é amplamente utilizada para descrever a frequência de eventos que ocorrem de forma aleatória e independente.
+
+- número de chamadas recebidas em um call center;
+- número de acidentes de trânsito em uma região durante um dia.
+
+Seu único parâmetro representa a taxa média de ocorrência dos eventos Ela assume valores não negativos e seu valor esperado e variância são iguais
+
+---
+class: middle
+
+distribuição de Poisson é útil na modelagem e análise de dados que envolvem contagem de eventos, permitindo calcular a probabilidade de ocorrer um determinado número de eventos em um intervalo específico. Essa distribuição tem aplicações em áreas como estatística, ciências sociais, economia, epidemiologia e engenharia, onde a ocorrência de eventos raros é de interesse para estudos e análises.
+
+$$
+\begin{align}
+E[X] =& \lambda \\
+Var(x) =& \lambda
+\end{align}
+$$
+
+---
+class: middle
+
+$$
+\begin{align}
+M_X(t) =& \sum_{n = 0}^{\infty} \frac{\lambda^n e{^-\lambda}}{n!} e^{tn} \\
+=& e^{-\lambda} \sum_{n = 0}^{\infty} \frac{(\lambda e^t)^n}{n!} \\
+=& e^{-\lambda}e^{\lambda e^t} \\
+=& e^{\lambda(e^t-1)}
+\end{align}
+$$
+
+$$
+\begin{align}
+M_Y(t) =& \prod_{i = n}^{n} M_{X_1}, \quad X_i \sim Poi(\lambda) \quad i.i.d.  \\
+=& (M_{X_1})^n \\
+=& e^{n\lambda(e^t-1)} \\ \\
+&\therefore \sum_{i = 1}^n X_i \sim Poi(n\lambda)
+\end{align}
+$$
+
+---
+class: middle
+
+# Distribuição Geométrica
+
+A distribuição geométrica é uma distribuição de probabilidade discreta que modela o número de tentativas independentes necessárias até ocorrer o primeiro sucesso em um experimento. Ela é comumente usada para descrever eventos de natureza binária, como lançar uma moeda até obter cara pela primeira vez ou realizar tentativas de um experimento até obter um resultado desejado.
+
+Essa distribuição é caracterizada por um único parâmetro, que representa a probabilidade de sucesso em uma única tentativa. A distribuição geométrica assume valores inteiros não negativos.
+
+--
+
+Ela é amplamente aplicada em áreas como estatística, ciências sociais, teoria das filas, análise de tempo de vida e estudos de probabilidade.
+
+---
+class: middle
+
+
+$$
+\begin{align}
+M_X(t) =& E[e^{tX}] \\
+=& \sum_{k = 0}^{\infty} e^{kt}p(1 - p)^{k-1} \\
+=& \frac{p}{1 - p}\sum_{k = 0}^{\infty}e^{tk}(1 - p)^k \\
+=& \frac{p}{1 - p}\sum_{k = 0}^{\infty} (e^{t}(1 - p))^k, \quad\quad \text{Série Geométrica} \\
+=& \frac{p}{1 - p} \frac{e^{t}(1 - p)}{1 - e^{t}(1 - p)} \\
+=& \frac{pe^t}{1 - e^t(1-p)} \quad \quad \blacksquare
+\end{align}
+$$
+
+---
+class: middle
+
+# Distribuição Binomial Negativa
+
+A distribuição binomial negativa é usada para contar o número de ensaios de Bernoulli independentes necessários para obter um número fixo de sucessos. É útil quando estamos interessados em quantificar o número de falhas antes de atingir um certo número de sucessos desejados. Essa distribuição é caracterizada por dois parâmetros: o número de sucessos desejados e a probabilidade de sucesso em cada ensaio.
+
+A distribuição binomial negativa é amplamente aplicada em diversas áreas ciências atuariais e análise de risco.
+
+---
+class: middle
+
+Ela é usada para modelar situações em que a contagem de falhas desempenha um papel importante na compreensão da ocorrência de eventos desejados.
+
+Por exemplo, pode ser usada para estimar o número de tentativas necessárias para obter um certo número de vendas, falhas de equipamentos antes de uma reparação ou o número de experimentos necessários para encontrar uma partícula rara em física de partículas. A distribuição binomial negativa oferece uma ferramenta útil para analisar esses tipos de eventos com base em probabilidades e contagens de sucessos e falhas.
+
+---
+class: middle
+
+A demonstração da função geradora de momentos da Binomial Negativa é mais complexa de se demonstrar, porém sabe-se que, seja $X_1, X_2, \cdots, X_n$, onde $X_i \sim geom(p)$ i.i.d. então $Y = \sum_{i = 1}^{n}X_i \sim BN(n,p)$
+
+$$
+\begin{align}
+M_Y(t) =& E[e^{tY}] = E[e^{t \times (X_1 + X_2 + \cdots + X_n)}] \\
+=& \prod_{i = 1}^{n} M_{X_1} = (M_{X_1})^n \\
+=& \left[ \frac{e^tp}{1 - e^t(1-p)} \right]^n \quad \quad \blacksquare
+\end{align}
+$$
+
+Para ver a demonstração completa [(Clique Aqui)](https://www.math.arizona.edu/~tgk/464_10/chap4_9_29.pdf)
+
+---
+class: middle
+
+# Outras Distribuições Discretas
+
+- Distribuição Hipergeométrica:
+  - Amostragem sem reposição;
+
+- Distribuição Uniforme Discreta;
+  - Valores igualmente prováveis;
+
+- Distribuição de Zipf
+  - Modelar a frequência de ocorrência de eventos em dados textuais;
+
+---
+class: middle
+
+# Outras Distribuições Discretas
+
+- Distribuição de Yule-Simon
+  - Modelar a frequência de eventos raros;
+
+- Distribuição de Rademacher
+  - Modelar um resultado aleatório +1 ou -1, igualmente provavel;
+
+- Distribuição de Logarítmica
+  - Modelar o número de tentativas independentes necessárias para obter o primeiro sucesso, com uma probabilidade decrescente à medida que as tentativas aumentam.
+
+---
+class: middle, center, inverse
+
+# Distribuições Contínuas Principais
+
+---
+class: middle
+
+## Distribuição Uniforme
+
+A Distribuição Uniforme $( U(a,b) )$ é uma distribuição de probabilidade simples, caracterizada por uma distribuição uniforme e constante de probabilidades em um intervalo específico, $x \in [a, b]$. Ela é frequentemente usada quando não há preferência ou viés em relação aos valores dentro desse intervalo.
+
+É amplamente aplicada em áreas como simulação, modelagem estatística, oferecendo uma distribuição igualitária de chances. É uma ferramenta versátil e fácil de usar em diferentes contextos estatísticos e científicos.
+
+--
+
+**Sua maior utilidade vem do Teorema da Transformação Inversa**, o qual possibilita representar qualquer função de distribuição inversível como entradas providas de uma distribuição uniforme.
+
+---
+class: middle
+
+$$
+\begin{align}
+f(x) =& \dfrac{1}{b - a}, \qquad a < x < b \\
+F(X) =& \dfrac{x - a}{b - a}, \\
+E[X] =& \dfrac{a + b}{2} \\
+Var(x) =& \dfrac{(b - a)^2}{12} \\
+M(t) =& \begin{cases} 
+      1 & t = 0 \\
+      \frac{e^{bt}-e^{at}}{t(b-a)} & t \neq 0
+   \end{cases}
+\end{align}
+$$
+
+---
+class: middle
+
+Seja $F_X^{-1}(.)$ definida por $F_X^{-1}(u) = inf\{ x: F_X(x) - u \}, 0 < u < 1$ se $U \sim U(0,1) \forall x \in \mathbb{R}$
+
+$$
+\begin{align}
+P(F^{-1}(U) \leq x) =& P(F_X^{-1}(U) \leq F_X(x)), &F_X\text{ é monótona} \\
+=& P(U \leq F_X(x)) & F_X(F_X^{-1}(U) = U) \\
+=& F_U(F_X(x)) & \text{Como U é U(0,1) } \Rightarrow F_U(a) = a \\
+=& F_X(x)& \\
+=& P(X \leq x)&
+\end{align}
+$$
+
+---
+class: middle
+
+## Distribuição Exponencial
+
+A Distribuição Exponencial descreve o tempo de espera entre eventos ocorrendo de forma aleatória e contínua, seguindo uma taxa média específica, o que faz com que ela seja muito utilizada em áreas como saúde e/ou engenharia. Para extimar valores como a taxa média de vida de uma pessoa e/ou objeto.
+
+--
+
+Ela é útil para modelar fenômenos que envolvem tempos de espera ou durações, como tempo de vida de produtos, tempo entre falhas em sistemas, tempo de espera em filas e tempo de resposta em sistemas de atendimento.
+
+$$
+\begin{align}
+f(x) = \lambda e^{\lambda x}
+\end{align}
+$$
+
+---
+class: middle
+
+Uma das principais propriedades da Distribuição Exponencial é a chamada **"Perda de Memória"**, o que significa que o tempo decorrido não afeta a probabilidade de um evento ocorrer no futuro. Essa propriedade torna a distribuição exponencial útil em muitas aplicações práticas.
+
+$$
+\begin{align}
+P(T > s + t | T > s) \overset{def}{=}& \dfrac{P\left( \{ T > s + t\}\cap \{ T > s \} \right)}{P(T > s)} \\
+=& \dfrac{P( T > s + t)}{P(T > s)} \\
+=& \dfrac{e^{-\lambda(s+t)}}{e^{-\lambda s}} \\
+=& e^{-\lambda t} \\
+=& P(T > t)
+\end{align}
+$$
+Ou seja, a ocorrência do evento "s", não influenciará na ocorrência do evento t.
+
+---
+class: middle
+
+## Distribuição Gama
+
+A Distribuição Gama é caracterizada por sua forma assimétrica e flexibilidade para modelar uma ampla variedade de comportamentos de dados. Ela é frequentemente usada para modelar tempos de espera, tais como tempo de vida de produtos, tempo entre eventos, tempo de falhas em sistemas, entre outros. Além disso, a distribuição gama é usada para modelar variáveis que envolvem valores positivos contínuos.
+
+---
+class: middle
+
+Uma das principais características da distribuição gama é que ela possui dois parâmetros: o parâmetro de forma (alpha) e o parâmetro de taxa (beta). Esses parâmetros permitem ajustar a distribuição aos dados observados e capturar diferentes formas e comportamentos. A forma da distribuição gama pode variar desde uma forma exponencial até uma forma mais simétrica ou assimétrica, dependendo dos valores dos parâmetros.
+
+```{r}
+plot_gamma <- function(alpha, beta, xlim_inf, xlim_sup){
+  theta <- seq(0,1,length=500)
+  post <- dgamma(theta, alpha, beta)
+  df <- data_frame(post,theta)
+  
+  ggplot(data=df,aes(x=theta))+
+    stat_function(
+      fun=dgamma
+      , args=list( shape = alpha, scale = beta )
+    )+
+    xlim(x = c(xlim_inf,xlim_sup))+
+    ylab('')+
+    xlab('Variavel Aleatoria')+
+    ggtitle(
+      label = expression('Distribuicao Gama - '~Gamma~'('~alpha~' =', alpha ,' , ',~beta~' = ', beta,' )')
+    )+
+    theme_default
+}
+```
+
+```{r}
+data_gammas <- tibble(
+   x = rep(seq(0,15,length=500), 5)
+   , y = c(
+     dgamma(seq(0,15,length=500), 1, 2), dgamma(seq(0,15,length=500), 2, 2)
+     , dgamma(seq(0,15,length=500), 3, 2), dgamma(seq(0,15,length=500), 5, 1)
+     , dgamma(seq(0,15,length=500), 7.5, 1)
+   )
+   , tipo = c(
+     rep('p1 = 1; p2 = 2', 500), rep('p1 = 2; p2 = 2', 500)
+     , rep('p1 = 3; p2 = 2', 500), rep('p1 = 5; p2 = 1', 500)
+     , rep('p1 = 7.5; p2 = 1', 500)
+   )
+ )
+gammas_plot <- data_gammas %>% 
+  ggplot(aes(x=x, y = y, group = tipo, color = tipo))+
+    geom_line()+
+    xlim(x = c(0,15))+
+    ylim(x = c(0,0.75))+
+    ylab('')+xlab('')+
+    scale_fill_brewer(palette = 'Set1')+
+    guides(color = guide_legend(title = ''))+
+    scale_x_continuous(breaks = 0:15)+
+    theme_default+
+    theme(legend.position = 'bottom')
+```
+
+```{r}
+gammas_plot+ plot_annotation(
+  title = 'Distribuição Gama',
+  subtitle = 'Dependendo do valor dos parametros altera o nivel de assimetria e curtose'
+)
+```
+
+---
+class: middle
+
+```{r}
+tibble(
+   y = c(
+     rgamma(2500, 1, 2), rgamma(2500, 2, 2)
+     , rgamma(2500, 3, 2), rgamma(2500, 5, 1)
+     , rgamma(2500, 7.5, 1)
+   )
+   , tipo = c(
+     rep('p1 = 1; p2 = 2', 2500), rep('p1 = 2; p2 = 2', 2500)
+     , rep('p1 = 3; p2 = 2', 2500), rep('p1 = 5; p2 = 1', 2500)
+     , rep('p1 = 7.5; p2 = 1', 2500)
+   )
+ ) %>%
+  group_by(tipo) %>% 
+  summarise(
+    Curtose = kurtosis(y)
+    , Assimetria = skewness(y)
+  ) %>% kbl(booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+---
+class: middle
+
+# Assimetria
+
+  - Assimetria: É uma medida do grai de simetria em torno da média dos dados; Podemos interpretar essa medida visualmente e numéricamente. Ela é estimada pelo método do coeficiente de Fisher, que é calculado a partir do terceiro momento (estimado pelo método dos momentos):
+
+
+$$g_1 = \dfrac{n^2 \cdot M_3}{(n-1) \times (n-2)S^3}$$
+--
+Onde terceiro momento é dado por:
+
+$$M_3 = \dfrac{\sum_{i=1}^{n}(X_i - \bar{X})^3}{n}$$
+
+- $g_1$ = 0: Distribuição Simétrica;
+- $g_1$ > 0: Distribuição Assimétrica positiva (à direita);
+- $g_1$ < 0: Distribuição Assimétrica negativa (à esquerda).
+
+---
+class: middle
+
+# Curtose
+
+Representa o grau de achatamento da distribuição, isto é, quão espalhados os dados estão em torno da média. A curva padrão é tomada como referência e é possível fazer a interpretação tanto visualmente quanto numéricamente.
+
+- *Mesocúrtica*: Curva em forma de sino;
+- *Platicúrtica*: Possui um grau de achatamento maior que da curva normal padrão, o que nos indica que os dados estão mais "espalhados";
+- *Leptocúrtica*: Possui um grau de achatamento menor do que a curva normal padrão (mais pontiagua), indica que os dados estão mais concentrado (< $\sigma^2$).
+
+---
+class: middle
+
+A curtose pode ser calculada pelo coeficiente de curtose de Fisher, que neste caso utiliza o quarto momento de ordem superior ao redor da média:
+
+$$g_2 = \dfrac{n^2 \cdot (n+1)\cdot M_4}{(n-1)\cdot(n-2)\cdot(n-3)\cdot S^4} - 3 \dfrac{(n-1)^2}{(n-2)\cdot(n-3)}$$
+
+Onde quarto momento é dado por:
+
+$$M_4 = \dfrac{\sum_{i=1}^{n} (x_i - \bar{x})^4}{n}$$
+
+- *K = 3*, curva normal padrão;
+- *K > 3*, curva leptocúrtica;
+- *k < 3*, curva platicúrtica.
+
+---
+class: middle
+
+# Distribuição Weibull
+
+A Distribuição Weibull é uma distribuição contínua utilizada para modelar a vida útil de produtos e eventos. Ela é especialmente adequada para descrever a distribuição de tempos de falha ou sobrevivência, onde a taxa de falha varia ao longo do tempo.
+
+A distribuição Weibull, assim como a gama, possui dois parâmetros: o parâmetro de forma (k) e o parâmetro de escala ( $\lambda$ ), que controlam a forma e a localização da distribuição.
+
+
+$$
+\begin{align}
+f(x) = \dfrac{k}{\lambda} \left( \dfrac{x}{\lambda} \right)^{k - 1} e^{-(x/\lambda)^k}
+\end{align}
+$$
+
+--
+
+Com sua flexibilidade e capacidade de se ajustar a diferentes padrões de dados, a distribuição Weibull desempenha um papel fundamental na modelagem e análise de eventos com tempos de vida variáveis. Sua aplicação é ampla e tem sido utilizada para auxiliar na tomada de decisões, previsões e avaliações de risco em diversos contextos.
+
+A distribuição Weibull pode ser obtida a partir de uma distribuição exponencial aonde, seja $X \sim exp(\lambda) \Rightarrow x^{1/k} \sim Wei(\lambda, k)$.
+
+---
+class: middle
+
+$$
+\begin{align}
+E[X] =& \dfrac{\lambda}{k}\Gamma\left( \dfrac{1}{k} \right) \\
+Var(x) =& \lambda^2 \left\{ \dfrac{2}{k}\Gamma\left( \dfrac{2}{\beta} \right) - \left[ \dfrac{1}{\beta}\Gamma\left(\dfrac{1}{\beta}  \right) \right]^2 \right\} \\
+M_x(t) =& \int_{0}^{\infty} e^{tx}\dfrac{k}{\lambda} \left( \dfrac{x}{\lambda} \right)^{k - 1}e^{-(x/\lambda)^k} dx
+\end{align}
+$$
+
+---
+class: middle
+
+```{r}
+data_weis <- tibble(
+   x = rep(seq(0,5,length=500), 5)
+   , y = c(
+     dweibull(seq(0,5,length=500), 1, 2), dweibull(seq(0,5,length=500), 2, 2)
+     , dweibull(seq(0,5,length=500), 3, 2), dweibull(seq(0,5,length=500), 5, 1)
+     , dweibull(seq(0,5,length=500), 7.5, 1)
+   )
+   , tipo = c(
+     rep('p1 = 1; p2 = 2', 500), rep('p1 = 2; p2 = 2', 500)
+     , rep('p1 = 3; p2 = 2', 500), rep('p1 = 5; p2 = 1', 500)
+     , rep('p1 = 7.5; p2 = 1', 500)
+   )
+ )
+weis_plot <- data_weis %>% 
+  ggplot(aes(x=x, y = y, group = tipo, color = tipo))+
+    geom_line()+
+    xlim(x = c(0,5))+
+    ylab('')+xlab('')+
+    scale_fill_brewer(palette = 'Set1')+
+    guides(color = guide_legend(title = ''))+
+    scale_x_continuous(breaks = 0:5)+
+    theme_default+
+    theme(legend.position = 'bottom')
+```
+
+```{r}
+weis_plot+ plot_annotation(
+  title = 'Distribuição Weibull',
+  subtitle = 'Dependendo do valor dos parametros altera o nivel de assimetria e curtose'
+)
+```
+
+---
+class: middle
+
+```{r}
+tibble(
+   y = c(
+     rweibull(2500, 1, 2), rweibull(2500, 2, 2)
+     , rweibull(2500, 3, 2), rweibull(2500, 5, 1)
+     , rweibull(2500, 7.5, 1)
+   )
+   , tipo = c(
+     rep('p1 = 1; p2 = 2', 2500), rep('p1 = 2; p2 = 2', 2500)
+     , rep('p1 = 3; p2 = 2', 2500), rep('p1 = 5; p2 = 1', 2500)
+     , rep('p1 = 7.5; p2 = 1', 2500)
+   )
+ ) %>%
+  group_by(tipo) %>% 
+  summarise(
+    Curtose = kurtosis(y)
+    , Assimetria = skewness(y)
+  ) %>% kbl(booktabs = T) %>%
+  kable_styling(latex_options = "striped")
+```
+
+---
+class: middle
+
+# Distribuição Beta
+
+A distribuição Beta é uma das distribuições de probabilidade mais versáteis e amplamente utilizadas em estatística e teoria das probabilidades. Ela descreve a distribuição de probabilidades de uma variável aleatória que está limitada a um intervalo definido, geralmente entre 0 e 1. A distribuição Beta é frequentemente usada para modelar proporções, probabilidades e taxas de sucesso em experimentos e processos.
+
+--
+
+Características:
+
+- Intervalo limitado;
+- Versatilidade de escala e locação;
+- Muito utilizada em inferência Bayesiana:
+  - Normalmente utilizada para similar a distribuição uniforme e é utilizada como conjulgada.
+
+---
+class: middle
+
+# Distribuição Normal
+
+Ela é caracterizada por uma curva simétrica em forma de sino, com média ( $\mu$ ) e desvio padrão ( $\sigma^2$ ) como parâmetros. A curva da distribuição normal é simétrica em torno da média, e a maioria dos valores se concentra em torno dessa média. A forma da curva é determinada pelo desvio padrão, que indica a dispersão dos valores em relação à média.
+
+---
+class: middle, center
+
+```{r}
+data_norm <- tibble(
+   x = rep(seq(-15,15,length=500), 3)
+   , y = c(
+     dnorm( x = seq(-15,15,length=500), mean = 0, sd = 1 )
+     , dnorm(x = seq(-15,15,length=500), mean = 0, sd = 2)
+     , dnorm(x = seq(-15,15,length=500), mean = 0, sd = 4)
+   )
+   , tipo = c(
+     rep('mu = 0; sigma2 = 1', 500), rep('mu = 0; sigma2 = 4', 500)
+     , rep('mu = 0; sigma = 16', 500)
+   )
+ )
+
+norm_plot <- data_norm %>% 
+  ggplot(aes(x=x, y = y, group = tipo, color = tipo))+
+    geom_line()+
+    xlim(x = c(-10,10))+
+    ylab('')+xlab('')+
+    scale_fill_brewer(palette = 'Set1')+
+    guides(color = guide_legend(title = ''))+
+    #scale_x_continuous(breaks = 0:5)+
+    theme_default+
+    theme(legend.position = 'bottom')
+```
+
+```{r}
+norm_plot+ plot_annotation(
+  title = 'Distribuição Normal',
+  subtitle = 'Dependendo do valor da variancia a concentracao da distribuicao e alterada'
+)
+```
+
+---
+class: middle
+
+A distribuição normal é amplamente aplicada em diversas áreas, devido a várias propriedades importantes. Uma delas é a propriedade de que a média, mediana e moda da distribuição normal são iguais (devido a sua simetria).
+
+--
+
+A distribuição normal é fundamental em várias técnicas estatísticas, como inferência estatística, modelagem de dados e análise de séries temporais. Sua forma simétrica e propriedades estatísticas bem estabelecidas a tornam uma ferramenta poderosa na compreensão e análise de dados.
+
+---
+class: middle
+
+## Demonstração - Padronização da Normal
+
+$$
+Z = \dfrac{X-\mu}{\sigma}, \qquad \text{Dado que } X \sim N(\mu,\sigma^2)
+$$
+
+--
+
+$$
+\begin{align}
+M_{\left( \dfrac{X-\mu}{\sigma} \right)}(t) =& M_{\left( X-\mu \right)}(t/\sigma) \\
+=& M_X \left(\dfrac{t}{\sigma} \right)exp\{ \mu t/\sigma \} \\
+=& exp \left\{ \dfrac{\mu t}{\sigma} + \sigma^2\frac{t^2}{\sigma^2} \cdot \frac{1}{2} - \dfrac{\mu t}{\sigma} \right\} \\
+=& exp \left\{ \dfrac{\mu t}{\sigma} - \dfrac{\mu t}{\sigma} + \frac{t^2}{2} \right\}\\
+=& exp \left\{ \frac{t^2}{2} \right\} \\
+=& exp \left\{ 0\cdot t + 1^2 \cdot \frac{t^2}{2} \right\}, \qquad \therefore Z \sim N(0,1) \quad \blacksquare
+\end{align}
+$$
+
+---
+class: middle, center, inverse
+
+# Porque é tão importante?
+
+---
+class: middle
+
+## Teorema Central do Limite (TCL)
+
+### TCL de Lindeberg–Lévy
+
+O Teorema Central do Limite estabelece que, quando uma grande amostra de observações independentes é coletada de qualquer distribuição, a média dessas observações se aproximará de uma distribuição normal, independentemente da forma da distribuição original.
+
+$$
+\begin{align}
+  \sqrt(n) \left[ \left( \dfrac{1}{n} \sum_{i = 1}^{n} X_i  \right) - \mu \right] \overset{d}{\rightarrow}& N(0,\sigma^2) \\
+    \sqrt(n) \left( \bar{x} - \mu \right) \overset{d}{\rightarrow}& N(0,\sigma^2)
+\end{align}
+$$
+
+--
+
+Isso significa que, mesmo que os dados individuais não sigam uma distribuição normal, a média de uma grande amostra desses dados tenderá a se distribuir de acordo com uma curva normal. Esse teorema é importante porque permite que os estatísticos realizem inferências estatísticas precisas e façam previsões com base em amostras aleatórias, mesmo quando não conhecem a distribuição subjacente dos dados.
+
+---
+class: middle, center, inverse
+
+# Simulações
+
+---
+class: middle, center
+
+## Uniforme (0,1)
+
+```{r, fig.height=6}
+p1 <- runif(10000) %>% 
+  as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default+
+  plot_annotation(
+        title = 'Distribuição uniforme (0,1)',
+        caption = 'n = 10.000'
+    )
+
+p2 <- 1:10000 %>% 
+  map(\(x) runif(10)) %>% 
+  map_dbl(mean) %>% as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default
+
+p1+p2
+```
+
+- Mas se a média não é 0, qual a média?
+
+---
+class: middle
+
+Sabemos que a média de uma uniforme é igual a $\dfrac{b-a}{2} = 1/2$, então.
+
+
+```{r}
+1:10000 %>% 
+  map(\(x) runif(10)) %>% 
+  map_dbl(mean) %>% as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  geom_vline(xintercept = .5, color = 'orangered', linetype = 'dashed')+
+  theme_default
+```
+
+---
+class: middle, center, inverse
+
+## Distribuição Beta.
+
+A distribuição Beta é uma distribuição muito restrita quando comparada com as outras, pois ela só apresenta valores em um pequeno espaço $x \in [0,1]$. Então Ela também converge para a Normal ?
+
+$$\\[1in]$$
+
+**Spoiler: SIM!**
+
+---
+class: middle, center
+
+## Beta(6,2)
+
+```{r}
+p1 <- rbeta(10000, shape1 = 6, shape2 = 2) %>% 
+  as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default+
+  plot_annotation(
+        title = 'Distribuição Beta (6,2)',
+        caption = 'n = 10.000'
+    )
+
+p2 <- 1:10000 %>% 
+  map(\(x) rbeta(n = 10, shape1 = 6, shape2 = 2)) %>% 
+  map_dbl(mean) %>% as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default
+
+p1+p2
+```
+
+---
+class: middle
+
+Sabemos que a média de uma beta é igual a $\dfrac{\alpha}{\alpha + \beta} = \dfrac{6}{6+2} = 6/8$, então.
+
+
+```{r}
+1:10000 %>% 
+  map(\(x) rbeta(n = 10, shape1 = 6, shape2 = 2)) %>% 
+  map_dbl(mean) %>% as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  geom_vline(xintercept = 6/8, color = 'orangered', linetype = 'dashed')+
+  theme_default
+```
+
+---
+class: middle, center, inverse
+
+## Então o TCL sempre funciona?
+
+$$\\[1in]$$
+
+**NÃO!**
+
+---
+class: middle
+
+Para que o TCl seja válido é necessário algumas condições:
+
+1. As observações na amostra devem ser independentes umas das outras;
+2. Média e Variância populacional devem ser finitas $E[X], Var(X) < \infty$;
+3. O tamanho da amostra deve ser grande o suficiente.
+
+- Exemplos
+  - Distribuição Cauchy;
+  - Distribuição Pareto $\alpha \leq 1$
+
+---
+class: middle, center
+
+## Pareto(0.5)
+
+```{r}
+p1 <- rPareto(10000, 1000, .5) %>% 
+  as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default+
+  plot_annotation(
+        title = 'Distribuição Pareto(0.5)',
+        caption = 'n = 10.000'
+    )
+
+p2 <- 1:10000 %>% 
+  map(\(x) rPareto(10, 1000, .5)) %>% 
+  map_dbl(mean) %>% as_tibble() %>% 
+  ggplot(aes(x=value)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#111111")+
+  theme_default
+
+p1+p2
+```
+
+---
+class: middle, center, inverse
+
+# Outras Aplicações
+
+---
+class: middle
+
+A partir do TCL, é possível definir um estimador assimétrico, de forma que, seja possível obter um estimador que, dado um cojunto de dados suficientemente grande, se aproxime do valor do parâmetro. Sem que seja necessário um cálculo complexo e específico dado uma distribuição qualquer.
+
+Que possua as propriedades de um estimador de máxima verossimilhança e que nos permita calcular seus intervalos de confiança.
+
+--
+
+- Distribuição Assintótica:
+
+$$
+\begin{align}
+  \sqrt(n) \left( \hat{\theta}_n - \theta_0 \right) \overset{d}{\rightarrow}& N(0,V)
+\end{align}
+$$
+
+- Calculo do Intervalo de Confiança:
+
+$$
+\begin{align}
+  \left[ \hat{\theta} \pm q^Z_{(1 - \alpha/2)} * \widehat{se}(\theta) \right]
+\end{align}
+$$
+
+<!-- Distribuição Log-Normal -->
+
+---
+class: middle, center, inverse
+
+# Quando utilizar cada uma delas?
+
+---
+class: middle
+
+- Distribuição Uniforme: É utilizada quando todas as observações têm a mesma probabilidade de ocorrência em um intervalo contínuo. É comumente aplicada em situações em que não há razão para esperar que um valor ocorra com mais frequência do que outro dentro do intervalo;
+
+--
+
+- Distribuição Exponencial: É aplicada em situações em que se está interessado no tempo entre eventos sucessivos em um processo de Poisson. É comumente usada em análise de tempos de espera, como o tempo entre chegadas de clientes em um sistema de fila;
+
+--
+
+- Distribuição Gama: É utilizada para modelar a duração de eventos ou o tempo de vida de um objeto. É comumente aplicada em análise de sobrevivência, tempo de espera, entre outras aplicações.
+
+---
+class: middle
+
+- Distribuição Weibull: É aplicada para modelar a taxa de falha de um objeto ao longo do tempo. É comumente usada em análise de confiabilidade e tempo de vida de componentes;
+
+--
+
+- Distribuição Beta: É utilizada para modelar variáveis aleatórias que têm um intervalo limitado entre 0 e 1, como proporções e taxas de sucesso. É frequentemente aplicada em análise de experimentos, estudos de proporções e análise de dados de teste;
+
+--
+
+- Distribuição Normal: É amplamente aplicada quando os dados seguem uma distribuição simétrica em forma de sino e a média e o desvio padrão são parâmetros importantes. É frequentemente utilizada em testes de hipóteses, intervalos de confiança e modelagem de dados contínuos;
+
+--
+
+- Distribuição Log-Normal: É utilizada quando os dados têm uma distribuição assimétrica positiva e a transformação logarítmica dos dados segue uma distribuição normal. É comumente aplicada em análise de dados de tempo de espera, análise financeira e modelagem de variáveis com assimetria positiva.
+
+---
+
+# Bibliografia
+
+```{r, load_refs, echo=FALSE}
+library(RefManageR)
+bib <- ReadBib("ref.bib", check = FALSE)
+ui <- "- "
+```
+
+```{r, print_refs, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+for (i in 1:length(bib)) {
+  ref(bib[[i]])
+}
+```
+
+```{r}
+# First, render the presentation
+rmarkdown::render("modulo_2.Rmd")
+
+# Then, export the slide to PDF
+xaringan::export_slide("modulo_2.html", slide_index = 1, output_file = "modulo2.pdf")
+```
+
